@@ -1,0 +1,10 @@
+[package]
+name = "bitopcalc"
+version = "0.1.0"
+edition = "2021"
+description = "A bitwise operation calculator with a terminal UI"
+
+[dependencies]
+ratatui = "0.29"
+crossterm = "0.28"
+unicode-width = "0.2"
