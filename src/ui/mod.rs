@@ -59,7 +59,7 @@ fn render_help(frame: &mut Frame, area: Rect) {
             Span::raw("Switch mode"),
         ]),
         Line::from(vec![
-            Span::styled(" 1-4   ", Style::default().fg(Color::Cyan)),
+            Span::styled(" F1-F4 ", Style::default().fg(Color::Cyan)),
             Span::raw("8/16/32/64 bit"),
         ]),
         Line::from(vec![

@@ -13,9 +13,9 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
     };
 
     let hints = if app.show_help {
-        "[q] Quit  [Tab] Mode  [1-4] Bit Width  [?] Close Help"
+        "[q] Quit  [Tab] Mode  [F1-F4] Bit Width  [?] Close Help"
     } else {
-        "[q] Quit  [Tab] Mode  [1-4] Width  [?] Help"
+        "[q] Quit  [Tab] Mode  [F1-F4] Width  [?] Help"
     };
 
     let spans = vec![
