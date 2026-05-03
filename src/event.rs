@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crossterm::event::{self, Event, KeyEvent};
+use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 
 pub enum AppEvent {
     Key(KeyEvent),
@@ -23,7 +23,12 @@ impl EventLoop {
         loop {
             if event::poll(self.tick_rate).unwrap() {
                 match event::read().unwrap() {
-                    Event::Key(key) => return AppEvent::Key(key),
+                    Event::Key(key) => {
+                        if key.kind == KeyEventKind::Release {
+                            continue;
+                        }
+                        return AppEvent::Key(key);
+                    }
                     Event::Resize(_, _) => return AppEvent::Resize,
                     _ => {}
                 }
