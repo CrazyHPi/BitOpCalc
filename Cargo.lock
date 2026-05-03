@@ -77,7 +77,6 @@ version = "0.1.0"
 dependencies = [
  "crossterm",
  "ratatui",
- "unicode-width",
  "windows-sys 0.59.0",
 ]
 

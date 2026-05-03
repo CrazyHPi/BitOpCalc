@@ -35,12 +35,12 @@ fn main() -> io::Result<()> {
         panic_hook(info);
     }));
 
-    // 尝试设置终端，如果失败则继续运行（可选）
-    if let Err(e) = setup_terminal() {
-        eprintln!("Warning: Failed to setup terminal: {}", e);
-        // 可以选择返回错误或继续运行
-        return Err(e);
-    }
+    // // 尝试设置终端，如果失败则继续运行（可选）
+    // if let Err(e) = setup_terminal() {
+    //     eprintln!("Warning: Failed to setup terminal: {}", e);
+    //     // 可以选择返回错误或继续运行
+    //     return Err(e);
+    // }
 
     let backend = CrosstermBackend::new(stdout());
     let mut terminal = Terminal::new(backend)?;
