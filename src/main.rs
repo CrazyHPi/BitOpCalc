@@ -5,7 +5,7 @@ mod event;
 mod input;
 mod ui;
 
-use std::io;
+use std::io::{self, stdout};
 
 use app::App;
 use crossterm::{
@@ -16,40 +16,47 @@ use crossterm::{
 use event::EventLoop;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-struct TerminalGuard;
-
-impl TerminalGuard {
-    fn new() -> io::Result<Self> {
-        enable_raw_mode()?;
-        let mut stdout = io::stdout();
-        execute!(stdout, EnterAlternateScreen, DisableMouseCapture)?;
-        Ok(Self)
-    }
+fn setup_terminal() -> io::Result<()> {
+    enable_raw_mode()?;
+    let mut out = stdout();
+    execute!(out, EnterAlternateScreen, DisableMouseCapture)?;
+    Ok(())
 }
 
-impl Drop for TerminalGuard {
-    fn drop(&mut self) {
-        let _ = disable_raw_mode();
-        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
-    }
+fn restore_terminal() {
+    let _ = disable_raw_mode();
+    let _ = execute!(stdout(), LeaveAlternateScreen, DisableMouseCapture);
 }
 
 fn main() -> io::Result<()> {
-    let _guard = TerminalGuard::new()?;
+    let panic_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        restore_terminal();
+        panic_hook(info);
+    }));
 
-    let backend = CrosstermBackend::new(io::stdout());
+    // 尝试设置终端，如果失败则继续运行（可选）
+    if let Err(e) = setup_terminal() {
+        eprintln!("Warning: Failed to setup terminal: {}", e);
+        // 可以选择返回错误或继续运行
+        return Err(e);
+    }
+
+    let backend = CrosstermBackend::new(stdout());
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
     let mut app = App::new();
     let event_loop = EventLoop::new(config::TICK_RATE);
 
-    loop {
+    let result = loop {
         if !app.running {
-            break;
+            break Ok(());
         }
 
-        terminal.draw(|frame| ui::draw(frame, &mut app))?;
+        if let Err(e) = terminal.draw(|frame| ui::draw(frame, &mut app)) {
+            break Err(e);
+        }
 
         match event_loop.next() {
             event::AppEvent::Key(key) => {
@@ -60,7 +67,9 @@ fn main() -> io::Result<()> {
             }
             event::AppEvent::Resize => {}
         }
-    }
+    };
 
-    Ok(())
+    restore_terminal();
+
+    result
 }
