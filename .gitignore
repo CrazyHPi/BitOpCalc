@@ -1,0 +1,12 @@
+/target
+
+.claude
+
+# IntelliJ Idea
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# macOS
+*.DS_Store
