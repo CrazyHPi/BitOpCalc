@@ -46,7 +46,13 @@ fn render_real_time(app: &App) -> Vec<Line<'static>> {
         } else {
             state.operand_a.clone()
         },
-        state.operator.symbol(),
+
+        if op_focus {
+            format!("( {} )", state.operator.symbol())
+        } else {
+            format!("{}", state.operator.symbol())
+        },
+
         if b_focus {
             format!("> {} <", state.operand_b)
         } else if state.operand_b.is_empty() {
