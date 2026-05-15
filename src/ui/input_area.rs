@@ -5,6 +5,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::Frame;
 
 use crate::app::App;
+use crate::calc::parse_number;
 use crate::input::real_time::OperandField;
 
 pub fn render(frame: &mut Frame, area: Rect, app: &App) {
@@ -33,6 +34,8 @@ fn render_real_time(app: &App) -> Vec<Line<'static>> {
     let b_hex = app.bit_width.format_hex(b_val);
     let a_focus = state.focused_field == OperandField::A;
     let b_focus = state.focused_field == OperandField::B;
+
+    let op_focus = state.focused_field == OperandField::Operator;
 
     let line1 = format!(
         "  {:<18}   Op: {:<6}   {:<18}",
@@ -83,18 +86,4 @@ fn render_expression(app: &App) -> Vec<Line<'static>> {
         Line::from(line2),
         Line::from(Span::raw("")),
     ]
-}
-
-fn parse_number(s: &str) -> Option<u64> {
-    let s = s.trim();
-    if s.is_empty() {
-        return Some(0);
-    }
-    if s.starts_with("0x") || s.starts_with("0X") {
-        u64::from_str_radix(&s[2..], 16).ok()
-    } else if s.starts_with("0b") || s.starts_with("0B") {
-        u64::from_str_radix(&s[2..], 2).ok()
-    } else {
-        s.parse::<u64>().ok()
-    }
 }

@@ -16,7 +16,7 @@ pub fn compute_layout(area: ratatui::layout::Rect) -> UiRects {
             Constraint::Length(3),  // header
             Constraint::Length(1),  // mode bar
             Constraint::Length(3),  // input
-            Constraint::Min(4),     // bit visualizer
+            Constraint::Min(8),     // bit visualizer
             Constraint::Length(5),  // result panel
             Constraint::Length(1),  // error line
         ])

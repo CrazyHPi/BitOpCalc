@@ -1,5 +1,6 @@
 use crate::calc::bit_width::BitWidth;
 use crate::calc::engine::{apply, CalcResult, Operator};
+use crate::calc::parse_number;
 use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::app::App;
@@ -40,19 +41,15 @@ impl RealTimeState {
 
         Some(apply(self.operator, a, b, width))
     }
-}
 
-fn parse_number(s: &str) -> Option<u64> {
-    let s = s.trim();
-    if s.is_empty() {
-        return Some(0);
-    }
-    if s.starts_with("0x") || s.starts_with("0X") {
-        u64::from_str_radix(&s[2..], 16).ok()
-    } else if s.starts_with("0b") || s.starts_with("0B") {
-        u64::from_str_radix(&s[2..], 2).ok()
-    } else {
-        s.parse::<u64>().ok()
+    pub fn get_operand_values(&self, width: &BitWidth) -> Option<(u64, u64)> {
+        if self.operand_a.is_empty() && self.operand_b.is_empty() {
+            return None;
+        }
+        let mask = width.mask();
+        let a = parse_number(&self.operand_a).unwrap_or(0) & mask;
+        let b = parse_number(&self.operand_b).unwrap_or(0) & mask;
+        Some((a, b))
     }
 }
 
