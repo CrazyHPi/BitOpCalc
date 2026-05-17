@@ -6,6 +6,7 @@ mod input;
 mod ui;
 
 use std::io::{self, stdout};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use app::App;
 use crossterm::{
@@ -16,14 +17,43 @@ use crossterm::{
 use event::EventLoop;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
+static TERMINAL_SETUP: AtomicBool = AtomicBool::new(false);
+
+#[cfg(windows)]
+fn init_windows_console() -> io::Result<()> {
+    use windows_sys::Win32::System::Console::{
+        GetConsoleMode, GetStdHandle, SetConsoleMode,
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING, STD_OUTPUT_HANDLE,
+    };
+
+    unsafe {
+        let handle = GetStdHandle(STD_OUTPUT_HANDLE);
+        if handle.is_null() {
+            return Err(io::Error::last_os_error());
+        }
+        let mut mode: u32 = 0;
+        if GetConsoleMode(handle as _, &mut mode) == 0 {
+            return Err(io::Error::last_os_error());
+        }
+        SetConsoleMode(handle as _, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    }
+    Ok(())
+}
+
 fn setup_terminal() -> io::Result<()> {
+    #[cfg(windows)]
+    init_windows_console()?;
+
     enable_raw_mode()?;
-    let mut out = stdout();
-    execute!(out, EnterAlternateScreen, DisableMouseCapture)?;
+    execute!(stdout(), EnterAlternateScreen, DisableMouseCapture)?;
+    TERMINAL_SETUP.store(true, Ordering::SeqCst);
     Ok(())
 }
 
 fn restore_terminal() {
+    if !TERMINAL_SETUP.load(Ordering::SeqCst) {
+        return;
+    }
     let _ = disable_raw_mode();
     let _ = execute!(stdout(), LeaveAlternateScreen, DisableMouseCapture);
 }
@@ -35,16 +65,12 @@ fn main() -> io::Result<()> {
         panic_hook(info);
     }));
 
-    // // 尝试设置终端，如果失败则继续运行（可选）
-    // if let Err(e) = setup_terminal() {
-    //     eprintln!("Warning: Failed to setup terminal: {}", e);
-    //     // 可以选择返回错误或继续运行
-    //     return Err(e);
-    // }
+    if let Err(e) = setup_terminal() {
+        eprintln!("Warning: Failed to setup terminal: {}", e);
+    }
 
     let backend = CrosstermBackend::new(stdout());
     let mut terminal = Terminal::new(backend)?;
-    terminal.clear()?;
 
     let mut app = App::new();
     let event_loop = EventLoop::new(config::TICK_RATE);
